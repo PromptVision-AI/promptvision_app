@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}Files in {{ folder }} - Django Auth App{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Files in Folder: {{ folder }}</h1>
+        <a href="{% url 'user_home' %}" class="btn btn-primary">Back to Dashboard</a>
+    </div>
+    
+    {% if files %}
+        <div class="row">
+            {% for file in files %}
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-img-top text-center p-2">
+                            {% if resource_type == 'image' %}
+                                <img src="{{ file.secure_url }}" alt="Preview" class="img-fluid" style="max-height: 200px;">
+                            {% elif resource_type == 'video' %}
+                                <video width="100%" height="200" controls>
+                                    <source src="{{ file.secure_url }}" type="video/mp4">
+                                    Your browser does not support the video tag.
+                                </video>
+                            {% else %}
+                                <i class="fas fa-file fa-5x my-3"></i>
+                            {% endif %}
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title">{{ file.public_id|cut:folder|cut:"/" }}</h5>
+                            <p class="card-text">
+                                <strong>Type:</strong> {{ resource_type }}{% if file.format %}.{{ file.format }}{% endif %}<br>
+                                <strong>Size:</strong> {{ file.bytes|filesizeformat }}<br>
+                                <strong>Created:</strong> {{ file.created_at|date:"F d, Y" }}
+                            </p>
+                        </div>
+                        <div class="card-footer">
+                            <a href="{{ file.secure_url }}" target="_blank" class="btn btn-sm btn-primary">View</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            No files found in folder "{{ folder }}".
+        </div>
+    {% endif %}
+</div>
+{% endblock %} 
