@@ -49,7 +49,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "rest_app.middleware.AuthRequiredMiddleware",
+    # "rest_app.middleware.SupabaseAuthenticatedMiddleware",
+    "rest_app.middleware.SupabaseAuthMiddleware",
 ]
 
 ROOT_URLCONF = "promptvision_app.urls"
@@ -57,7 +58,7 @@ ROOT_URLCONF = "promptvision_app.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [os.path.join(BASE_DIR, 'templates')],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -65,6 +66,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                'rest_app.utils.context_processors.user_context',
             ],
         },
     },
@@ -127,7 +129,7 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Custom user model
-AUTH_USER_MODEL = 'rest_app.CustomUser'
+# AUTH_USER_MODEL = 'rest_app.CustomUser'
 
 # Login URL
 LOGIN_URL = 'login'
@@ -140,3 +142,8 @@ CLOUDINARY = {
     'api_key': os.getenv('CLOUDINARY_API_KEY', ''),
     'api_secret': os.getenv('CLOUDINARY_API_SECRET', ''),
 }
+
+AUTHENTICATION_BACKENDS = [
+    'rest_app.utils.auth_backends.SupabaseAuthBackend',
+    # 'django.contrib.auth.backends.ModelBackend',  # Keep the default backend as fallback
+]

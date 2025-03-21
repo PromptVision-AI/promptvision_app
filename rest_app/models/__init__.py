@@ -1,2 +1,2 @@
-from .user_model import CustomUser, CustomUserManager
+from .user_model import Account
 from .file_model import CloudinaryFile 

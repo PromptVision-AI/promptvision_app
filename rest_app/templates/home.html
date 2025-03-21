@@ -1,22 +1,23 @@
-{% extends 'base.html' %} {% block title %}Prompt Vision AI ✨{%endblock %} 
-{% block content %}
-<div class="home-container">
-  <h1 class="mb-4">Welcome to Prompt Vision App</h1>
-  <p class="lead mb-4">
-    an effective solution for your vision AI needs using natural language.
-  </p>
+{% extends 'base.html' %}
 
-  {% if user.is_authenticated %}
-  <div class="mb-4">
-    <h4>Hello, {{ user.email }}!</h4>
-    <p>You are already logged in.</p>
-    <a href="{% url 'user_home' %}" class="btn btn-primary">Go to Dashboard</a>
-  </div>
-  {% else %}
-  <div class="mb-4">
-    <p>Please login to access your dashboard.</p>
-    <a href="{% url 'login' %}" class="btn btn-primary">Login</a>
-  </div>
-  {% endif %}
+{% block title %}Welcome to Prompt Vision{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2 text-center">
+        <h1>Welcome to Prompt Vision</h1>
+        <p class="lead">Your AI image management solution</p>
+        
+        {% if is_authenticated %}
+        <div class="mt-4">
+            <a href="{% url 'user_home' %}" class="btn btn-primary btn-lg">Go to Dashboard</a>
+        </div>
+        {% else %}
+        <div class="mt-4">
+            <a href="{% url 'login' %}" class="btn btn-primary me-2">Login</a>
+            <a href="{% url 'register' %}" class="btn btn-outline-primary">Register</a>
+        </div>
+        {% endif %}
+    </div>
 </div>
-{% endblock %}
+{% endblock %} 
