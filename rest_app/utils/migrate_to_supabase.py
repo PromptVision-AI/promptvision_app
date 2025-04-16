@@ -42,8 +42,9 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'promptvision_app.settings')
 django.setup()
 
 ############ NOTE: UPDATE THIS LIST WITH ALL MODELS TO MIGRATE ############
-from rest_app.models import Account, CloudinaryFile
-MODELS_TO_MIGRATE = [Account, CloudinaryFile]
+from rest_app.models import Account, CloudinaryFile, Conversation, Prompt
+# MODELS_TO_MIGRATE = [Account, Conversation, Prompt, CloudinaryFile]
+MODELS_TO_MIGRATE = [Conversation, Prompt, CloudinaryFile]
 ###########################################################################
 
 
@@ -65,8 +66,8 @@ def django_type_to_postgres(field, model=None):
         return "smallint"
     elif isinstance(field, models.BooleanField):
         return "boolean"
-    elif isinstance(field, models.DateField):
-        return "date"
+    # elif isinstance(field, models.DateField):
+    #     return "date"
     elif isinstance(field, models.DateTimeField):
         return "timestamp with time zone"
     elif isinstance(field, models.TimeField):

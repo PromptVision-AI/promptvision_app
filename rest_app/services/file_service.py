@@ -10,18 +10,19 @@ class SupabaseFileService:
         """Create a file record in Supabase"""
         try:
             # Prepare the data for insert
-            data = {
-                'user_id': user_id,
-                'public_id': file_data['public_id'],
-                'filename': file_data['filename'],
-                'url': file_data['url'],
-                'resource_type': file_data['resource_type'],
-                'format': file_data.get('format', ''),
-                'folder': file_data.get('folder', '')
-            }
+            # data = {
+            #     'user_id': user_id,
+            #     'public_id': file_data['public_id'],
+            #     'filename': file_data['filename'],
+            #     'url': file_data['url'],
+            #     'resource_type': file_data['resource_type'],
+            #     'format': file_data.get('format', ''),
+            #     'folder': file_data.get('folder', '')
+            # }
             
             # Use the base model's insert method
-            result = CloudinaryFile.insert(data)
+            # result = CloudinaryFile.insert(data)
+            result = CloudinaryFile.insert(file_data)
             return result
         except Exception as e:
             logger.error(f"File creation error: {str(e)}")

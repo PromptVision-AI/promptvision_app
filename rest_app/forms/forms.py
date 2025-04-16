@@ -20,8 +20,8 @@ class FileUploadForm(forms.Form):
     file = forms.FileField(
         widget=forms.FileInput(attrs={'class': 'form-control'})
     )
-    folder = forms.CharField(
-        max_length=255, 
-        required=False,
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Folder name (optional)'})
-    )
+    # folder = forms.CharField(
+    #     max_length=255, 
+    #     required=False,
+    #     widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Folder name (optional)'})
+    # )

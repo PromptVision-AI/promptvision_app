@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% load custom_tags %}
+
+{% block title %}Main - Prompt Vision{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Left Panel: Conversation History -->
+    <div class="col-md-3">
+        <div class="d-flex mb-2 justify-content-between align-items-center">
+            <h5>Conversations</h5>
+            <a href="{% url 'conversation_list' %}" class="btn btn-sm btn-outline-primary">+</a>
+        </div>
+        <ul class="list-group">
+            {% for conv in conversations %}
+            <a href="{% url 'conversation_detail' conversation_id=conv.id %}" class="list-group-item {% if selected_conversation.id == conv.id %}active{% endif %}">
+                {{ conv.title }}<br>
+                <small class="text-muted">{{ conv.created_at|date:"M d, Y" }}</small>
+            </a>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- Center + Right Panels: Per-Prompt Aligned Rows -->
+    <div class="col-md-9">
+        <h5>Chat + Steps Panel</h5>
+
+        {% for prompt in prompts %}
+        <div class="row mb-3 align-items-start">
+            <!-- Chat Column -->
+            <div class="col-md-7">
+                <div class="card">
+                    <div class="card-header">
+                        <strong>You:</strong> {{ prompt.text }}
+                    </div>
+                    <div class="card-body">
+                        {% for img in input_outputs|get_item:prompt.id %}
+                            {% if img.step_type == 'input' %}
+                            <img src="{{ img.url }}" class="img-fluid mb-2" alt="Input Image">
+                            {% endif %}
+                        {% endfor %}
+                        <strong>AI:</strong> {{ prompt.response }}
+                        {% for img in input_outputs|get_item:prompt.id %}
+                            {% if img.step_type == 'output' %}
+                            <img src="{{ img.url }}" class="img-fluid mt-2" alt="Output Image">
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Steps Column -->
+            <div class="col-md-5">
+                {% if steps|get_item:prompt.id %}
+                <div class="card">
+                    <div class="card-header">
+                        <strong>{{ prompt.text }}</strong>
+                    </div>
+                    <div class="card-body">
+                        {% for img in steps|get_item:prompt.id %}
+                        <div class="card mb-2">
+                            <div class="card-body p-2">
+                                <img src="{{ img.url }}" class="img-fluid mb-1" alt="Step Image">
+                                <small class="text-muted">Step: {{ img.step_type }}</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+
+        <!-- Prompt Form -->
+        <form method="post" enctype="multipart/form-data" action="{% url 'send_prompt' %}">
+            {% csrf_token %}
+            <input type="hidden" name="conversation_id" value="{{ selected_conversation.id }}">
+            <div class="mb-3">
+                <label for="prompt_text" class="form-label">Your Prompt</label>
+                <input type="text" name="prompt_text" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="file" class="form-label">Upload Image (optional)</label>
+                <input type="file" name="file" class="form-control">
+            </div>
+            <button type="submit" class="btn btn-primary">Send</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

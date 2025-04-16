@@ -157,3 +157,35 @@ class SupabaseModelMixin:
         except Exception as e:
             logger.error(f"Supabase delete_by_id error in {cls.table_name}: {str(e)}")
             return False 
+    
+    @classmethod
+    def select_by_field_in_list(cls, field_name, values, order_by=None, desc=False):
+        """
+        Retrieve records where a specific field is in a list of values.
+        
+        Args:
+            field_name: Name of the field to apply the IN filter to
+            values: List of values for the IN clause
+            order_by: Optional field to order results
+            desc: Descending order if True
+
+        Returns:
+            A list of matching records
+        """
+        if not cls.table_name:
+            raise ValueError(f"table_name not defined for {cls.__name__}")
+        
+        try:
+            query = supabase_client.table(cls.table_name).select('*')
+
+            if values:
+                query = query.in_(field_name, values)
+
+            if order_by:
+                query = query.order(order_by, desc=desc)
+            
+            result = query.execute()
+            return result.data
+        except Exception as e:
+            logger.error(f"Supabase select_by_field_in_list error in {cls.table_name}: {str(e)}")
+            return []

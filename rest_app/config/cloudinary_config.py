@@ -24,6 +24,7 @@ def initialize_cloudinary():
 
 # Initialize the client
 cloudinary_client = initialize_cloudinary()
+CLOUDINARY_FOLDER_NAME = os.getenv('CLOUDINARY_FOLDER_NAME', 'default_folder')
 
 # File management functions
 def upload_file(file, folder=None, public_id=None):
@@ -42,8 +43,9 @@ def upload_file(file, folder=None, public_id=None):
         'resource_type': 'auto',  # Automatically detect resource type
     }
     
+    upload_options['folder'] = CLOUDINARY_FOLDER_NAME
     if folder:
-        upload_options['folder'] = folder
+        upload_options['folder'] += ("/" + folder)
     
     if public_id:
         upload_options['public_id'] = public_id

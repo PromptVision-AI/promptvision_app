@@ -25,8 +25,10 @@ SECRET_KEY = "django-insecure-mw!!4$biz0*4(xn-%$3ope==_0(7o3!m4$8a6fg74m8+)5u_av
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-
 ALLOWED_HOSTS = []
+
+# DEBUG = False
+# ALLOWED_HOSTS = ['*']  # for local development
 
 
 # Application definition
@@ -110,10 +112,7 @@ USE_I18N = True
 
 USE_TZ = True
 
-# the following static files dir will list all the static directories of all apps
-STATIC_FILES_DIRS = {
-    os.path.join(BASE_DIR, 'static'),
-}
+
 
 # file upload directory
 MEDIA_URL = "images/"
@@ -122,6 +121,10 @@ MEDIA_URL = "images/"
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = "static/"
+# the following static files dir will list all the static directories of all apps
+STATIC_FILES_DIRS = {
+    os.path.join(BASE_DIR, 'static'),
+}
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -133,7 +136,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Login URL
 LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = 'user_home'
+LOGIN_REDIRECT_URL = 'conversation_list'
 LOGOUT_REDIRECT_URL = 'home'
 
 # Cloudinary settings
