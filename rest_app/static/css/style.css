@@ -1,0 +1,44 @@
+body {
+  background: linear-gradient(135deg, #FFF8F3 0%, #ffffff 100%);
+  font-family: "Poppins", sans-serif;
+  color: #333;
+}
+
+.navbar {
+  background-color: #7C83FD !important;
+}
+.navbar .nav-link {
+  color: #fff !important;
+  font-weight: 500;
+}
+
+.card {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.btn-primary {
+  background-color: #7C83FD;
+  border: none;
+}
+.btn-primary:hover {
+  background-color: rgb(73.7669172932, 83.4511278195, 252.2330827068);
+}
+
+h2, h5, .card-header {
+  color: #7C83FD;
+}
+
+input.form-control, select.form-control, textarea.form-control {
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.bg-hero {
+  background-image: url("/static/images/bg-pattern.svg");
+  background-size: cover;
+  background-position: center;
+}
+
+/*# sourceMappingURL=style.css.map */

@@ -1,0 +1,51 @@
+@use "sass:color";
+
+// Variables
+$primary: #7C83FD;
+$secondary: #F7C8E0;
+$light: #FFF8F3;
+$dark: #343a40;
+$text-color: #333;
+
+body {
+  background: linear-gradient(135deg, $light 0%, #ffffff 100%);
+  font-family: 'Poppins', sans-serif;
+  color: $text-color;
+}
+
+.navbar {
+  background-color: $primary !important;
+  .nav-link {
+    color: #fff !important;
+    font-weight: 500;
+  }
+}
+
+.card {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.btn-primary {
+  background-color: $primary;
+  border: none;
+  &:hover {
+    background-color: color.adjust($primary, $lightness: -10%);
+  }
+}
+
+h2, h5, .card-header {
+  color: $primary;
+}
+
+input.form-control, select.form-control, textarea.form-control {
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.bg-hero {
+  background-image: url('/static/images/bg-pattern.svg');
+  background-size: cover;
+  background-position: center;
+}

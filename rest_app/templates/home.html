@@ -1,23 +1,20 @@
 {% extends 'base.html' %}
 
-{% block title %}Welcome to Prompt Vision{% endblock %}
+{% block title %}Welcome to PromptVision{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-8 offset-md-2 text-center">
-        <h1>Welcome to Prompt Vision</h1>
-        <p class="lead">Your AI image management solution</p>
-        
-        {% if is_authenticated %}
-        <div class="mt-4">
-            <a href="{% url 'conversation_list' %}" class="btn btn-primary btn-lg">Go to Dashboard</a>
-        </div>
-        {% else %}
-        <div class="mt-4">
-            <a href="{% url 'login' %}" class="btn btn-primary me-2">Login</a>
-            <a href="{% url 'register' %}" class="btn btn-outline-primary">Register</a>
-        </div>
-        {% endif %}
+<section class="hero-section text-center d-flex align-items-center justify-content-center flex-column">
+    <img src="https://cdn-icons-png.flaticon.com/512/891/891462.png" class="hero-icon mb-4" alt="Creative AI Icon" width="100">
+    <h1 class="display-4 fw-bold">Unleash Your Creativity with AI</h1>
+    <p class="lead text-muted w-75 mx-auto">PromptVision empowers content creators and creative teams to effortlessly inpaint, enhance, and transform images using powerful AI-driven workflows. Experience intuitive automation that feels like magic.</p>
+
+    {% if is_authenticated %}
+    <a href="{% url 'conversation_list' %}" class="btn btn-lg btn-primary mt-4 px-5 py-2 shadow">Go to Dashboard</a>
+    {% else %}
+    <div class="mt-4">
+        <a href="{% url 'login' %}" class="btn btn-primary btn-lg px-4 py-2 me-3">Login</a>
+        <a href="{% url 'register' %}" class="btn btn-outline-primary btn-lg px-4 py-2">Register</a>
     </div>
-</div>
-{% endblock %} 
+    {% endif %}
+</section>
+{% endblock %}
