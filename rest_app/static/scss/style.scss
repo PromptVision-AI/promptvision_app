@@ -1,51 +1,62 @@
 @use "sass:color";
 
-// Variables
-$primary: #7C83FD;
-$secondary: #F7C8E0;
-$light: #FFF8F3;
-$dark: #343a40;
+$primary: #6C63FF;
+$secondary: #FFB6B9;
+$light-bg: #fdfdfe;
 $text-color: #333;
 
 body {
-  background: linear-gradient(135deg, $light 0%, #ffffff 100%);
   font-family: 'Poppins', sans-serif;
+  background: linear-gradient(#ffffff, #ececfc);
   color: $text-color;
 }
 
 .navbar {
-  background-color: $primary !important;
-  .nav-link {
-    color: #fff !important;
-    font-weight: 500;
+  background-color: $light-bg;
+  border-bottom: 1px solid #eee;
+  border-radius: 0 0 12px 12px;
+}
+
+.navbar-brand {
+  font-weight: 600;
+  font-size: 1.5rem;
+}
+
+a.nav-link {
+  font-weight: 500;
+  color: $text-color !important;
+  transition: all 0.2s;
+  &:hover {
+    color: $primary !important;
   }
 }
 
-.card {
-  border: none;
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+.active {
+  color: $primary !important;
+  font-weight: 600;
 }
 
 .btn-primary {
   background-color: $primary;
   border: none;
+  transition: all 0.2s ease-in-out;
   &:hover {
     background-color: color.adjust($primary, $lightness: -10%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba($primary, 0.3);
   }
 }
 
-h2, h5, .card-header {
-  color: $primary;
+footer {
+  font-size: 0.875rem;
+  color: #888;
 }
 
-input.form-control, select.form-control, textarea.form-control {
-  border-radius: 8px;
-  border: 1px solid #ccc;
+.fade-in {
+  animation: fadeIn 1s ease-out both;
 }
 
-.bg-hero {
-  background-image: url('/static/images/bg-pattern.svg');
-  background-size: cover;
-  background-position: center;
+@keyframes fadeIn {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
 }

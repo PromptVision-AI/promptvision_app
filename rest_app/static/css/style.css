@@ -1,44 +1,63 @@
 body {
-  background: linear-gradient(135deg, #FFF8F3 0%, #ffffff 100%);
   font-family: "Poppins", sans-serif;
+  background: linear-gradient(#ffffff, #ececfc);
   color: #333;
 }
 
 .navbar {
-  background-color: #7C83FD !important;
-}
-.navbar .nav-link {
-  color: #fff !important;
-  font-weight: 500;
+  background-color: #fdfdfe;
+  border-bottom: 1px solid #eee;
+  border-radius: 0 0 12px 12px;
 }
 
-.card {
-  border: none;
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+.navbar-brand {
+  font-weight: 600;
+  font-size: 1.5rem;
+}
+
+a.nav-link {
+  font-weight: 500;
+  color: #333 !important;
+  transition: all 0.2s;
+}
+a.nav-link:hover {
+  color: #6C63FF !important;
+}
+
+.active {
+  color: #6C63FF !important;
+  font-weight: 600;
 }
 
 .btn-primary {
-  background-color: #7C83FD;
+  background-color: #6C63FF;
   border: none;
+  transition: all 0.2s ease-in-out;
 }
 .btn-primary:hover {
-  background-color: rgb(73.7669172932, 83.4511278195, 252.2330827068);
+  background-color: rgb(59.9423076923, 48, 255);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(108, 99, 255, 0.3);
 }
 
-h2, h5, .card-header {
-  color: #7C83FD;
+footer {
+  font-size: 0.875rem;
+  color: #888;
 }
 
-input.form-control, select.form-control, textarea.form-control {
-  border-radius: 8px;
-  border: 1px solid #ccc;
+.fade-in {
+  animation: fadeIn 1s ease-out both;
 }
 
-.bg-hero {
-  background-image: url("/static/images/bg-pattern.svg");
-  background-size: cover;
-  background-position: center;
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /*# sourceMappingURL=style.css.map */
