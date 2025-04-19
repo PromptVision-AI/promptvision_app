@@ -110,12 +110,13 @@ def send_prompt_view(request):
     # Call AI API
     try:
         # api_url = os.getenv("AI_INPAINT_API_URL")
-        # payload = {
-        #     "prompt_id": prompt["id"],
-        #     "prompt": prompt_text,
-        #     "conversation_id": conversation_id,
-        #     "input_image_url": input_image_url  # ✅ pass uploaded image URL
-        # }
+        payload = {
+            "user_id": user_id,
+            "prompt_id": prompt["id"],
+            "prompt": prompt_text if not input_image_url else f"{prompt_text} Here is the image URL: {input_image_url}",
+            "conversation_id": conversation_id,
+            "input_image_url": input_image_url  # ✅ pass uploaded image URL
+        }
         # response = requests.post(api_url, json=payload)
         # result_data = response.json()
 
@@ -150,7 +151,7 @@ def send_prompt_view(request):
         }
 
         # Update prompt with AI response
-        Prompt.update_by_id(prompt["id"], {"response": result_data.get("final_response", "")})
+        Prompt.update_by_id(prompt["id"], {"response": result_data.get("final_response", ""), "text": f"{prompt_text} Here is the image URL: {input_image_url}"})
 
         # Save visual steps and final output images to supabase
         for i, step in enumerate(result_data.get("steps", [])):
