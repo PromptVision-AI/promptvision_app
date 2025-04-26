@@ -9,7 +9,44 @@
         background-color: #6C63FF !important;
         color: white !important;
     }
+    #form-container {
+        position: relative;
+    }
+
+    #loading-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(240, 240, 240, 0.8); /* light gray semi-transparent */
+        backdrop-filter: blur(4px); /* ✨ soft blur on form */
+        z-index: 10;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        pointer-events: none; /* block clicks without trapping focus */
+    }
+
+    .overlay-content {
+        pointer-events: all; /* allow animation to work */
+        animation: fadeIn 0.5s ease-out both;
+    }
+
+    @keyframes fadeIn {
+    0% { opacity: 0; transform: scale(0.95); }
+    100% { opacity: 1; transform: scale(1); }
+    }
+    .disabled-file {
+        opacity: 0.5;
+        pointer-events: none;
+    }
 </style>
+<script
+  src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs"
+  type="module">
+</script>
 {% endblock %}
 
 {% block content %}
@@ -85,20 +122,72 @@
         </div>
         {% endfor %}
 
-        <!-- Prompt Form -->
-        <form method="post" enctype="multipart/form-data" action="{% url 'send_prompt' %}">
-            {% csrf_token %}
-            <input type="hidden" name="conversation_id" value="{{ selected_conversation.id }}">
-            <div class="mb-3">
-                <label for="prompt_text" class="form-label">Your Prompt</label>
-                <input type="text" name="prompt_text" class="form-control" required>
+        <div class="position-relative" id="form-container">
+            <!-- Loading Overlay specific to form -->
+            <div id="loading-overlay" class="d-none">
+                <div class="overlay-content">
+                    <dotlottie-player
+                    src="https://lottie.host/dace45c1-6e01-4219-a78a-0635f76689bd/Qr7jrWeYwB.lottie"
+                    background="transparent"
+                    speed="1"
+                    style="width: 170px; height: 170px; margin-bottom: -24px;"
+                    loop
+                    autoplay
+                    ></dotlottie-player>
+                    <p class="text-muted mt-3">Processing your request...</p>
+                </div>
             </div>
-            <div class="mb-3">
-                <label for="file" class="form-label">Upload Image (optional)</label>
-                <input type="file" name="file" class="form-control">
-            </div>
-            <button type="submit" class="btn btn-primary">Send</button>
-        </form>
+        
+            <!-- Actual form -->
+            <form method="post" enctype="multipart/form-data" action="{% url 'send_prompt' %}">
+                {% csrf_token %}
+                <input type="hidden" name="conversation_id" value="{{ selected_conversation.id }}">
+                <div class="mb-3">
+                    <label for="prompt_text" class="form-label">Your Prompt</label>
+                    <input type="text" name="prompt_text" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label for="file" class="form-label">Upload Image (optional)</label>
+                    <input type="file" name="file" class="form-control">
+                </div>
+                <button type="submit" class="btn btn-primary">Send</button>
+            </form>
+        </div>
     </div>
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    window.scrollTo({
+        top: document.body.scrollHeight,
+        behavior: "smooth"
+    });
+
+    const form = document.querySelector("form");
+    const loadingOverlay = document.getElementById("loading-overlay");
+    const navLinks = document.querySelectorAll(".list-group-item"); // Conversation list links
+    const promptInput = form.querySelector('input[name="prompt_text"]');
+    const fileInput = form.querySelector('input[name="file"]');
+    const submitButton = form.querySelector('button[type="submit"]');
+
+    form.addEventListener("submit", function(e) {
+        // Make prompt input readonly
+        promptInput.readOnly = true;
+
+        // Disable file input and button
+        fileInput.disabled = true;
+        submitButton.disabled = true;
+
+        // Disable conversation list links
+        navLinks.forEach(link => {
+            link.classList.add("disabled");
+            link.style.pointerEvents = "none";
+            link.style.opacity = "0.5";
+        });
+
+        // Show overlay
+        loadingOverlay.classList.remove("d-none");
+    });
+});
+</script>
 {% endblock %}
