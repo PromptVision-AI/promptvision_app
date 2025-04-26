@@ -50,10 +50,10 @@
                             </div>
                             {% endif %}
                         {% endfor %}
-                        <strong>AI:</strong> {{ prompt.response }}
+                        <strong>Florencio:</strong> {{ prompt.response.text_response }}
                         {% for img in input_outputs|get_item:prompt.id %}
-                            {% if img.step_type == 'output' %}
-                            <img src="{{ img.url }}" class="img-fluid mt-2" alt="Output Image">
+                            {% if img.step_type == 'output' and img.url%}
+                                <img src="{{ img.url }}" class="img-fluid mt-2" alt="Output Image">
                             {% endif %}
                         {% endfor %}
                     </div>
@@ -71,7 +71,9 @@
                         {% for img in steps|get_item:prompt.id %}
                         <div class="card mb-2">
                             <div class="card-body p-2">
-                                <img src="{{ img.url }}" class="img-fluid mb-1" alt="Step Image">
+                                {% if img.url %}
+                                    <img src="{{ img.url }}" class="img-fluid mb-1" alt="Step Image">
+                                {% endif %}
                                 <small class="text-muted">Step: {{ img.step_type }}</small>
                             </div>
                         </div>

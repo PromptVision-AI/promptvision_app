@@ -1,7 +1,7 @@
-import os
-import requests
 from datetime import datetime
-import time
+import requests
+import os
+import json
 from uuid import uuid4
 from django.shortcuts import render, redirect
 from django.contrib import messages
@@ -10,6 +10,7 @@ from rest_app.models import Conversation, Prompt, CloudinaryFile
 from rest_app.forms import FileUploadForm
 from rest_app.config.cloudinary_config import upload_file
 from rest_app.services.file_service import SupabaseFileService
+from rest_app.utils.utils import remove_text_after
 
 
 def conversation_list_view(request):
@@ -25,8 +26,11 @@ def conversation_detail_view(request, conversation_id):
     user_id = request.session.get("user_id")
     conversation = Conversation.select_by_id(conversation_id)
     prompts = Prompt.select_by_fields(fields={"conversation_id": conversation_id}, order_by="created_at")
+    prompts = [ {**obj, "response": json.loads(obj["response"]), "text": remove_text_after(obj["text"], " Here is the image URL:")} 
+               if "text" and "response" in obj else obj 
+               for obj in prompts 
+            ]
     steps, input_outputs = {}, {}
-
     # Get all files in this conversation
     prompt_ids = [p["id"] for p in prompts]
     files = CloudinaryFile.select_by_field_in_list("prompt_id", prompt_ids)
@@ -109,7 +113,8 @@ def send_prompt_view(request):
 
     # Call AI API
     try:
-        # api_url = os.getenv("AI_INPAINT_API_URL")
+        api_url = os.getenv("AI_INPAINT_API_URL")
+        print(f"AI API URL: {api_url}")
         payload = {
             "user_id": user_id,
             "prompt_id": prompt["id"],
@@ -117,41 +122,15 @@ def send_prompt_view(request):
             "conversation_id": conversation_id,
             "input_image_url": input_image_url  # ✅ pass uploaded image URL
         }
-        # response = requests.post(api_url, json=payload)
-        # result_data = response.json()
+        
+        response = requests.post(api_url, json=payload, timeout=9999)
+        result_data = response.json()
 
-        result_data = {
-            "final_response": "This is a simulated AI response to your prompt.",
-            "steps": [
-                {
-                    "step_type": "object_detection",
-                    "public_id": f"{user_id}/steps/{prompt['id']}_detection",
-                    "filename": f"{prompt['id']}_detection.jpg",
-                    "url": "https://deeplobe.ai/wp-content/uploads/2023/06/Object-detection-Real-world-applications-and-benefits.png",
-                    "resource_type": "image",
-                    "format": "jpg"
-                },
-                {
-                    "step_type": "segmentation",
-                    "public_id": f"{user_id}/steps/{prompt['id']}_segmentation",
-                    "filename": f"{prompt['id']}_segmentation.jpg",
-                    "url": "https://d12aarmt01l54a.cloudfront.net/cms/images/UserMedia-20220826182039/808-440.png",
-                    "resource_type": "image",
-                    "format": "jpg"
-                },
-                {
-                    "step_type": "output",
-                    "public_id": f"{user_id}/outputs/{prompt['id']}_output",
-                    "filename": f"{prompt['id']}_output.jpg",
-                    "url": "https://www.shutterstock.com/image-photo/hand-writing-text-output-260nw-388626541.jpg",
-                    "resource_type": "image",
-                    "format": "jpg"
-                }
-            ]
-        }
+        print("RESULT DATA:")
+        print(result_data)
 
         # Update prompt with AI response
-        Prompt.update_by_id(prompt["id"], {"response": result_data.get("final_response", ""), "text": f"{prompt_text} Here is the image URL: {input_image_url}"})
+        Prompt.update_by_id(prompt["id"], {"response": json.dumps(result_data.get("final_response", "")), "text": f"{prompt_text} Here is the image URL: {input_image_url}"})
 
         # Save visual steps and final output images to supabase
         for i, step in enumerate(result_data.get("steps", [])):
@@ -160,11 +139,11 @@ def send_prompt_view(request):
             cloud_folder = f"{user_id}/{folder_type}"
 
             SupabaseFileService.create_file(user_id, {
-                "public_id": step["public_id"],
-                "filename": step["filename"],
-                "url": step["url"],
-                "resource_type": step["resource_type"],
-                "format": step.get("format", ""),
+                "public_id": step["public_id"] if "public_id" in step else "",
+                "filename": step["filename"] if "filename" in step else "",
+                "url": step["url"] if "url" in step else "",
+                "resource_type": step["resource_type"] if "resource_type" in step else "",
+                "format": step.get("format", "") if "format" in step else "",
                 "folder": cloud_folder,
                 "prompt_id": prompt["id"],
                 "user_id": user_id,
@@ -176,34 +155,3 @@ def send_prompt_view(request):
         messages.error(request, f"AI API Error: {str(e)}")
 
     return redirect("conversation_detail", conversation_id=conversation_id)
-
-# Final output structure from the external AI API
-# {
-#   "final_response": "The masked object was removed and background filled.",
-#   "steps": [
-#     {
-#       "step_type": "object_detection",
-#       "public_id": "user123/steps/step1_detection",
-#       "filename": "step1_detection.jpg",
-#       "url": "https://res.cloudinary.com/your-cloud/image/upload/v123456/user123/steps/step1_detection.jpg",
-#       "resource_type": "image",
-#       "format": "jpg"
-#     },
-#     {
-#       "step_type": "segmentation",
-#       "public_id": "user123/steps/step2_segmentation",
-#       "filename": "step2_segmentation.jpg",
-#       "url": "https://res.cloudinary.com/your-cloud/image/upload/v123456/user123/steps/step2_segmentation.jpg",
-#       "resource_type": "image",
-#       "format": "jpg"
-#     },
-#     {
-#       "step_type": "output",
-#       "public_id": "user123/outputs/final_output",
-#       "filename": "final_output.png",
-#       "url": "https://res.cloudinary.com/your-cloud/image/upload/v123456/user123/outputs/final_output.png",
-#       "resource_type": "image",
-#       "format": "png"
-#     }
-#   ]
-# }
