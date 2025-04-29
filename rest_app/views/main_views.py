@@ -6,6 +6,10 @@ from uuid import uuid4
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.conf import settings
+from django.core.mail import EmailMessage
+from django.template.loader import render_to_string
+from django.http import HttpResponse
+
 from rest_app.models import Conversation, Prompt, CloudinaryFile
 from rest_app.forms import FileUploadForm
 from rest_app.config.cloudinary_config import upload_file
@@ -26,12 +30,13 @@ def conversation_detail_view(request, conversation_id):
     user_id = request.session.get("user_id")
     conversation = Conversation.select_by_id(conversation_id)
     prompts = Prompt.select_by_fields(fields={"conversation_id": conversation_id}, order_by="created_at")
-    prompts = [ {**obj, "response": json.loads(obj["response"]), "text": remove_text_after(obj["text"], " Here is the image URL:")} 
-               if "text" and "response" in obj else obj 
-               for obj in prompts 
-            ]
+    prompts = [
+        {**obj, "response": json.loads(obj["response"]), "text": remove_text_after(obj["text"], " Here is the image URL:")}
+        if "text" and "response" in obj else obj
+        for obj in prompts
+    ]
+
     steps, input_outputs = {}, {}
-    # Get all files in this conversation
     prompt_ids = [p["id"] for p in prompts]
     files = CloudinaryFile.select_by_field_in_list("prompt_id", prompt_ids)
 
@@ -39,13 +44,27 @@ def conversation_detail_view(request, conversation_id):
         pid = file.get("prompt_id")
         input_type = file.get("step_type", "input")
 
+        # ✅ Parse reasoning_info text to JSON object
+        reasoning_info = file.get("reasoning_info")
+        if reasoning_info:
+            try:
+                file["reasoning_info"] = json.loads(reasoning_info)
+            except (json.JSONDecodeError, TypeError):
+                file["reasoning_info"] = {}
+
+        # Automatically prepare download_url if output image
+        if input_type == "output" and file.get("url"):
+            original_url = file["url"]
+            download_url = original_url.replace("/upload/", "/upload/fl_attachment/")
+            file["download_url"] = download_url
+
         # Input/Output images for Chat Panel
         if input_type in ["input", "output"]:
             if pid not in input_outputs:
                 input_outputs[pid] = []
             input_outputs[pid].append(file)
         else:
-            # Step visualisation
+            # Step visualization
             if pid not in steps:
                 steps[pid] = []
             steps[pid].append(file)
@@ -120,14 +139,11 @@ def send_prompt_view(request):
             "prompt_id": prompt["id"],
             "prompt": prompt_text if not input_image_url else f"{prompt_text} Here is the image URL: {input_image_url}",
             "conversation_id": conversation_id,
-            "input_image_url": input_image_url  # ✅ pass uploaded image URL
+            "input_image_url": input_image_url
         }
         
         response = requests.post(api_url, json=payload, timeout=9999)
         result_data = response.json()
-
-        print("RESULT DATA:")
-        print(result_data)
 
         # Update prompt with AI response
         Prompt.update_by_id(prompt["id"], {"response": json.dumps(result_data.get("final_response", "")), "text": f"{prompt_text} Here is the image URL: {input_image_url}"})
@@ -148,10 +164,47 @@ def send_prompt_view(request):
                 "prompt_id": prompt["id"],
                 "user_id": user_id,
                 "step_type": step_type,
-                "step_index": i + 1
+                "step_index": i + 1,
+                "reasoning_info": json.dumps(step.get("reasoning_info", {})) if "reasoning_info" in step else None
             })
 
     except Exception as e:
         messages.error(request, f"AI API Error: {str(e)}")
 
     return redirect("conversation_detail", conversation_id=conversation_id)
+
+def send_output_email_view(request):
+    if request.method == "POST":
+        user_email = request.session.get("user_email")
+        image_url = request.POST.get("image_url")
+        prompt_text = request.POST.get("prompt_text")
+
+        if not user_email or not image_url:
+            return HttpResponse("Missing information.", status=400)
+
+        # Render HTML email body
+        html_message = render_to_string("email.html", {
+            "prompt_text": prompt_text,
+            "image_url": image_url,
+            "user_email": user_email,
+        })
+
+        # Download image content
+        image_content = requests.get(image_url).content
+
+        # Create email
+        email = EmailMessage(
+            subject="Your PromptVision AI Output Image",
+            body=html_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[user_email],
+        )
+        email.content_subtype = "html"  # Set email type to HTML
+        email.attach('promptvision_output.jpg', image_content, 'image/jpeg')
+        email.send()
+
+        messages.success(request, "✅ Output image successfully sent to your email!")
+
+        return redirect(request.META.get('HTTP_REFERER', '/'))
+
+    return HttpResponse(status=405)

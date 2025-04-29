@@ -2,7 +2,7 @@ from django.urls import path
 from rest_app.views import (
     home_view, login_view, register_view, user_home_view, logout_view,
     upload_file_view, delete_file_view, list_folder_files_view,
-    conversation_list_view, conversation_detail_view, send_prompt_view
+    conversation_list_view, conversation_detail_view, send_prompt_view, send_output_email_view
 )
 
 urlpatterns = [
@@ -17,4 +17,5 @@ urlpatterns = [
     path("main/", conversation_list_view, name="conversation_list"),
     path("main/conversation/<int:conversation_id>/", conversation_detail_view, name="conversation_detail"),
     path("main/send-prompt/", send_prompt_view, name="send_prompt"),
+    path('send_output_email/', send_output_email_view, name='send_output_email'),
 ] 

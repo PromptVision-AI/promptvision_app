@@ -25,7 +25,13 @@ SECRET_KEY = "django-insecure-mw!!4$biz0*4(xn-%$3ope==_0(7o3!m4$8a6fg74m8+)5u_av
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-ALLOWED_HOSTS = []
+# ALLOWED_HOSTS = []
+
+# NOTE: For testing purposes using ngrok
+ALLOWED_HOSTS = ['*']
+CSRF_TRUSTED_ORIGINS = [
+    "https://a44f-203-30-15-185.ngrok-free.app",
+]
 
 # DEBUG = False
 # ALLOWED_HOSTS = ['*']  # for local development
@@ -151,3 +157,13 @@ AUTHENTICATION_BACKENDS = [
     'rest_app.utils.auth_backends.SupabaseAuthBackend',
     # 'django.contrib.auth.backends.ModelBackend',  # Keep the default backend as fallback
 ]
+
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+DEFAULT_FROM_EMAIL = "yourname@yourdomain.com"
+
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = "kong.alert.bot24@gmail.com"
+EMAIL_HOST_PASSWORD = "mlkhiejdreregbwd"
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

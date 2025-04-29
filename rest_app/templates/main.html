@@ -5,43 +5,60 @@
 
 {% block extra_head %}
 <style>
-    .active{
-        background-color: #6C63FF !important;
-        color: white !important;
-    }
-    #form-container {
-        position: relative;
-    }
+  /* === Your existing styles === */
+  .active { background-color: #6C63FF !important; color: white !important; }
+  #form-container { position: relative; }
+  #loading-overlay {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(240,240,240,0.8);
+    backdrop-filter: blur(4px);
+    z-index: 10; display: flex;
+    justify-content: center; align-items: center;
+    pointer-events: none;
+  }
+  .overlay-content { pointer-events: all; animation: fadeIn 0.5s ease-out both; }
+  @keyframes fadeIn { 0%{opacity:0;transform:scale(0.95)}100%{opacity:1;transform:scale(1)} }
+  .disabled-file { opacity:0.5; pointer-events:none; }
 
-    #loading-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(240, 240, 240, 0.8); /* light gray semi-transparent */
-        backdrop-filter: blur(4px); /* ✨ soft blur on form */
-        z-index: 10;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        pointer-events: none; /* block clicks without trapping focus */
-    }
+  /* === New popup‐in‐card styles === */
+  .custom-popup {
+    position: absolute;
+    top: 40px;    /* drop 40px below the card-body top */
+    right: 0;     /* align to right edge of card-body */
+    background: #fff;
+    padding: 15px;
+    width: 280px;
+    max-height: 60vh;
+    overflow-y: auto;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    z-index: 2000;
+  }
+  .custom-popup-close {
+    position: absolute;
+    top: 5px; right: 8px;
+    background: none; border: none;
+    font-size: 18px; cursor: pointer;
+    color: #333;
+  }
 
-    .overlay-content {
-        pointer-events: all; /* allow animation to work */
-        animation: fadeIn 0.5s ease-out both;
-    }
-
-    @keyframes fadeIn {
-    0% { opacity: 0; transform: scale(0.95); }
-    100% { opacity: 1; transform: scale(1); }
-    }
-    .disabled-file {
-        opacity: 0.5;
-        pointer-events: none;
-    }
+  /* Icon‐only button */
+  .btn-icon {
+    background: transparent;
+    border: none;
+    font-size: 1.25rem;
+    color: #6C63FF;
+    padding: 0.25rem;
+    margin: 0 0.15rem;
+    transition: color 0.2s ease;
+  }
+  .btn-icon:hover {
+    color: #4e49c1;
+  }
+  img{
+    border-radius: 5px;
+  }
 </style>
 <script
   src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs"
@@ -51,143 +68,252 @@
 
 {% block content %}
 <div class="row py-4" style="min-height: 80vh;">
-    <!-- Left Panel: Conversation History -->
-    <div class="col-md-3">
-        <div class="d-flex mb-2 justify-content-between align-items-center">
-            <h5>Conversations</h5>
-            <a href="{% url 'conversation_list' %}" class="btn btn-sm btn-outline-primary">+</a>
-        </div>
-        <ul class="list-group">
-            {% for conv in conversations %}
-            <a href="{% url 'conversation_detail' conversation_id=conv.id %}" class="list-group-item {% if selected_conversation.id == conv.id %}active{% endif %}">
-                {{ conv.title }}<br>
-                <small class="text-muted">{{ conv.created_at|date:"M d, Y" }}</small>
-            </a>
+  <!-- Left Panel -->
+  <div class="col-md-3">
+    <div class="d-flex mb-2 justify-content-between align-items-center">
+      <h5>Conversations</h5>
+      <a href="{% url 'conversation_list' %}" class="btn btn-sm btn-outline-primary">+</a>
+    </div>
+    <ul class="list-group">
+      {% for conv in conversations %}
+      <a href="{% url 'conversation_detail' conversation_id=conv.id %}"
+         class="list-group-item {% if selected_conversation.id == conv.id %}active{% endif %}">
+        {{ conv.title }}<br>
+        <small class="text-muted">{{ conv.created_at|date:"M d, Y" }}</small>
+      </a>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <!-- Chat + Steps Panel -->
+  <div class="col-md-9">
+    <h5>Chat + Steps Panel</h5>
+
+    {% for prompt in prompts %}
+    <div class="row mb-3 align-items-start">
+      <!-- Chat Column -->
+      <div class="col-md-7">
+        <div class="card">
+          <div class="card-header"><strong>You:</strong> {{ prompt.text }}</div>
+          <div class="card-body">
+            {% for img in input_outputs|get_item:prompt.id %}
+              {% if img.step_type == 'input' %}
+              <div><img src="{{ img.url }}" class="img-fluid mb-2" alt="Input Image"></div>
+              {% endif %}
             {% endfor %}
-        </ul>
-    </div>
 
-    <!-- Center + Right Panels: Per-Prompt Aligned Rows -->
-    <div class="col-md-9">
-        <h5>Chat + Steps Panel</h5>
+            <strong>Pezon:</strong> {{ prompt.response.text_response }}
 
-        {% for prompt in prompts %}
-        <div class="row mb-3 align-items-start">
-            <!-- Chat Column -->
-            <div class="col-md-7">
-                <div class="card">
-                    <div class="card-header">
-                        <strong>You:</strong> {{ prompt.text }}
-                    </div>
-                    <div class="card-body">
-                        {% for img in input_outputs|get_item:prompt.id %}
-                            {% if img.step_type == 'input' %}
-                            <div>
-                                <img src="{{ img.url }}" class="img-fluid mb-2" alt="Input Image">
-                            </div>
+            {% for img in input_outputs|get_item:prompt.id %}
+              {% if img.step_type == 'output' and img.url %}
+              <div class="text-center mb-3 position-relative">
+                <img src="{{ img.url }}" class="img-fluid mt-2" alt="Output Image"><br>
+            
+                <!-- Download button -->
+                <a href="{{ img.download_url }}" download
+                    class="btn-icon" data-bs-toggle="tooltip" title="Download">
+                    <i class="bi bi-download"></i>
+                </a>
+            
+                <!-- Send email form -->
+                <form method="post" action="{% url 'send_output_email' %}" style="display: inline;">
+                  {% csrf_token %}
+                  <input type="hidden" name="image_url" value="{{ img.url }}">
+                  <input type="hidden" name="prompt_text" value="{{ prompt.text }}">
+                  <button type="submit"
+                            class="btn-icon"
+                            data-bs-toggle="tooltip" title="Email to me">
+                    <i class="bi bi-envelope"></i>
+                  </button>
+                </form>
+            
+                <!-- NEW: View Output Details button -->
+                <button class="btn-icon"
+                        onclick="openPopup('out-{{ img.id }}')"
+                        data-bs-toggle="tooltip" title="View Details">
+                    <i class="bi bi-info-circle"></i>
+                </button>
+            
+                <!-- NEW: Inline pop-up for final-output reasoning -->
+                <div id="popup-out-{{ img.id }}" class="custom-popup" style="display:none;">
+                  <button class="custom-popup-close"
+                          onclick="closePopup('out-{{ img.id }}')">&times;</button>
+                  <h6 class="mb-2">Final Output Details</h6>
+            
+                  {% if img.reasoning_info %}
+                  <p><strong>Thought:</strong> {{ img.reasoning_info.thought }}</p>
+                  <hr>
+                  <h6>Action Input:</h6>
+                  <ul class="list-unstyled">
+                    {% for key, value in img.reasoning_info.action_input.items %}
+                    <li class="mb-2">
+                        <strong>
+                            {% if key == 'image_url' %}
+                              Image Input
+                            {% elif key == 'mask_url' %}
+                              Mask Input
+                            {% else %}
+                              {{ key|capfirst }}
                             {% endif %}
-                        {% endfor %}
-                        <strong>Florencio:</strong> {{ prompt.response.text_response }}
-                        {% for img in input_outputs|get_item:prompt.id %}
-                            {% if img.step_type == 'output' and img.url%}
-                                <img src="{{ img.url }}" class="img-fluid mt-2" alt="Output Image">
-                            {% endif %}
-                        {% endfor %}
-                    </div>
+                            :
+                        </strong><br>
+                      {% if value|stringformat:"s"|slice:":4" == "http" %}
+                        <img src="{{ value }}" class="img-fluid rounded" style="max-height:150px;">
+                      {% elif value|is_list %}
+                        {{ value|join:", " }}
+                      {% else %}
+                        {{ value }}
+                      {% endif %}
+                    </li>
+                    {% endfor %}
+                  </ul>
+                  {% else %}
+                  <p>No reasoning information available.</p>
+                  {% endif %}
                 </div>
-            </div>
+              </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+      </div>
 
-            <!-- Steps Column -->
-            <div class="col-md-5">
-                {% if steps|get_item:prompt.id %}
-                <div class="card">
-                    <div class="card-header">
-                        <strong>{{ prompt.text }}</strong>
-                    </div>
-                    <div class="card-body">
-                        {% for img in steps|get_item:prompt.id %}
-                        <div class="card mb-2">
-                            <div class="card-body p-2">
-                                {% if img.url %}
-                                    <img src="{{ img.url }}" class="img-fluid mb-1" alt="Step Image">
-                                {% endif %}
-                                <small class="text-muted">Step: {{ img.step_type }}</small>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
+      <!-- Steps Column -->
+      <div class="col-md-5">
+        {% if steps|get_item:prompt.id %}
+        <div class="card">
+          <div class="card-header"><strong>{{ prompt.text }}</strong></div>
+          <div class="card-body">
+            {% for img in steps|get_item:prompt.id %}
+            <div class="card mb-2">
+              <!-- Make this relative so popup can position inside -->
+              <div class="card-body p-2 position-relative">
+                {% if img.url %}
+                <img src="{{ img.url }}" class="img-fluid mb-1" alt="Step Image">
                 {% endif %}
-            </div>
-        </div>
-        {% endfor %}
+                <small class="text-muted d-block mb-2">Step: {{ img.step_type }}</small>
+                <button class="btn-icon"
+                        onclick="openPopup('{{ img.id }}')"
+                        data-bs-toggle="tooltip" title="View Details">
+                <i class="bi bi-info-circle"></i>
+                </button>
 
-        <div class="position-relative" id="form-container">
-            <!-- Loading Overlay specific to form -->
-            <div id="loading-overlay" class="d-none">
-                <div class="overlay-content">
-                    <dotlottie-player
-                    src="https://lottie.host/dace45c1-6e01-4219-a78a-0635f76689bd/Qr7jrWeYwB.lottie"
-                    background="transparent"
-                    speed="1"
-                    style="width: 170px; height: 170px; margin-bottom: -24px;"
-                    loop
-                    autoplay
-                    ></dotlottie-player>
-                    <p class="text-muted mt-3">Processing your request...</p>
+                <!-- Inline popup -->
+                <div id="popup-{{ img.id }}" class="custom-popup" style="display:none;">
+                  <button class="custom-popup-close" onclick="closePopup('{{ img.id }}')">&times;</button>
+                  <h6 class="mb-2">Step: {{ img.step_type }}</h6>
+                  <hr>
+                  {% if img.reasoning_info %}
+                  <p><strong>Thought:</strong> {{ img.reasoning_info.thought }}</p>
+                  <hr>
+                  <h6>Action Input:</h6>
+                  <ul class="list-unstyled">
+                    {% for key,value in img.reasoning_info.action_input.items %}
+                    <li class="mb-2">
+                        <strong>
+                            {% if key == 'image_url' %}
+                                Image Input
+                            {% elif key == 'mask_url' %}
+                                Mask Input
+                            {% else %}
+                                {{ key|capfirst }}
+                            {% endif %}
+                            :
+                        </strong><br>
+                      {% if value|stringformat:"s"|slice:":4" == "http" %}
+                        <img src="{{ value }}" class="img-fluid rounded" style="max-height:150px;">
+                      {% elif value|is_list %}
+                        {{ value|join:", " }}
+                      {% else %}
+                        {{ value }}
+                      {% endif %}
+                    </li>
+                    {% endfor %}
+                  </ul>
+                  {% else %}
+                  <p>No reasoning information available.</p>
+                  {% endif %}
                 </div>
+              </div>
             </div>
-        
-            <!-- Actual form -->
-            <form method="post" enctype="multipart/form-data" action="{% url 'send_prompt' %}">
-                {% csrf_token %}
-                <input type="hidden" name="conversation_id" value="{{ selected_conversation.id }}">
-                <div class="mb-3">
-                    <label for="prompt_text" class="form-label">Your Prompt</label>
-                    <input type="text" name="prompt_text" class="form-control" required>
-                </div>
-                <div class="mb-3">
-                    <label for="file" class="form-label">Upload Image (optional)</label>
-                    <input type="file" name="file" class="form-control">
-                </div>
-                <button type="submit" class="btn btn-primary">Send</button>
-            </form>
+            {% endfor %}
+          </div>
         </div>
+        {% endif %}
+      </div>
     </div>
+    {% endfor %}
+
+    <!-- Form + Loading Overlay -->
+    <div class="position-relative" id="form-container">
+      <div id="loading-overlay" class="d-none">
+        <div class="overlay-content">
+          <dotlottie-player
+            src="https://lottie.host/dace45c1-6e01-4219-a78a-0635f76689bd/Qr7jrWeYwB.lottie"
+            background="transparent" speed="1"
+            style="width:170px;height:170px;margin-bottom:-24px;"
+            loop autoplay>
+          </dotlottie-player>
+          <p class="text-muted mt-3">Processing your request...</p>
+        </div>
+      </div>
+
+      <form method="post" enctype="multipart/form-data" action="{% url 'send_prompt' %}">
+        {% csrf_token %}
+        <input type="hidden" name="conversation_id" value="{{ selected_conversation.id }}">
+        <div class="mb-3">
+          <label class="form-label">Your Prompt</label>
+          <input type="text" name="prompt_text" class="form-control" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Upload Image (optional)</label>
+          <input type="file" name="file" class="form-control">
+        </div>
+        <button type="submit" class="btn btn-primary">Send</button>
+      </form>
+    </div>
+  </div>
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", function() {
+  // Show inline popup
+  function openPopup(id) {
+    document.getElementById('popup-' + id).style.display = 'block';
+  }
+  // Hide inline popup
+  function closePopup(id) {
+    document.getElementById('popup-' + id).style.display = 'none';
+  }
+
+  // Form submission + loading overlay
+  document.addEventListener("DOMContentLoaded", function() {
     window.scrollTo({
         top: document.body.scrollHeight,
         behavior: "smooth"
     });
 
-    const form = document.querySelector("form");
-    const loadingOverlay = document.getElementById("loading-overlay");
-    const navLinks = document.querySelectorAll(".list-group-item"); // Conversation list links
+    const form = document.querySelector('#form-container form');
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const navLinks = document.querySelectorAll('.list-group-item');
     const promptInput = form.querySelector('input[name="prompt_text"]');
-    const fileInput = form.querySelector('input[name="file"]');
     const submitButton = form.querySelector('button[type="submit"]');
 
-    form.addEventListener("submit", function(e) {
-        // Make prompt input readonly
-        promptInput.readOnly = true;
-
-        // Disable file input and button
-        fileInput.disabled = true;
-        submitButton.disabled = true;
-
-        // Disable conversation list links
-        navLinks.forEach(link => {
-            link.classList.add("disabled");
-            link.style.pointerEvents = "none";
-            link.style.opacity = "0.5";
-        });
-
-        // Show overlay
-        loadingOverlay.classList.remove("d-none");
+    form.addEventListener('submit', function() {
+      promptInput.readOnly = true;
+      submitButton.disabled = true;
+      navLinks.forEach(link => {
+        link.classList.add('disabled');
+        link.style.pointerEvents = 'none';
+        link.style.opacity = '0.5';
+      });
+      loadingOverlay.classList.remove('d-none');
     });
-});
+
+    // Initialize Bootstrap tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.forEach(function (el) {
+      new bootstrap.Tooltip(el);
+    });
+  });
 </script>
 {% endblock %}
