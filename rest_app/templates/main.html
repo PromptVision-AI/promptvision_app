@@ -102,7 +102,7 @@
               {% endif %}
             {% endfor %}
 
-            <strong>Pezon:</strong> {{ prompt.response.text_response }}
+            <strong>AI:</strong> {{ prompt.response.text_response }}
 
             {% for img in input_outputs|get_item:prompt.id %}
               {% if img.step_type == 'output' and img.url %}
@@ -139,6 +139,7 @@
                   <button class="custom-popup-close"
                           onclick="closePopup('out-{{ img.id }}')">&times;</button>
                   <h6 class="mb-2">Final Output Details</h6>
+                  <hr>
             
                   {% if img.reasoning_info %}
                   <p><strong>Thought:</strong> {{ img.reasoning_info.thought }}</p>
@@ -182,7 +183,7 @@
       <div class="col-md-5">
         {% if steps|get_item:prompt.id %}
         <div class="card">
-          <div class="card-header"><strong>{{ prompt.text }}</strong></div>
+          <div class="card-header"><strong>AI Execution Steps:</strong></div>
           <div class="card-body">
             {% for img in steps|get_item:prompt.id %}
             <div class="card mb-2">

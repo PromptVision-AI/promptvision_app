@@ -29,6 +29,11 @@ def conversation_list_view(request):
 def conversation_detail_view(request, conversation_id):
     user_id = request.session.get("user_id")
     conversation = Conversation.select_by_id(conversation_id)
+
+    if conversation.get("user_id") != user_id:
+        messages.error(request, "You do not have permission to view this conversation.")
+        return redirect("conversation_list")
+
     prompts = Prompt.select_by_fields(fields={"conversation_id": conversation_id}, order_by="created_at")
     prompts = [
         {**obj, "response": json.loads(obj["response"]), "text": remove_text_after(obj["text"], " Here is the image URL:")}
